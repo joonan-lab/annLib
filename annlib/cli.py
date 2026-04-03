@@ -153,6 +153,43 @@ def setup():
     )
 
 
+@main.command("install-skills")
+def install_skills():
+    """CC 스킬을 ~/.claude/skills/ 에 설치합니다."""
+    skills_src = Path(__file__).parent.parent / "skills"
+    skills_dst = Path.home() / ".claude" / "skills"
+
+    if not skills_src.exists():
+        console.print("[red]스킬 파일을 찾을 수 없습니다.[/red]")
+        sys.exit(1)
+
+    skills_dst.mkdir(parents=True, exist_ok=True)
+
+    installed = []
+    for skill_dir in sorted(skills_src.iterdir()):
+        if not skill_dir.is_dir():
+            continue
+        dst = skills_dst / skill_dir.name
+        if dst.exists():
+            import shutil
+            shutil.rmtree(dst)
+        import shutil
+        shutil.copytree(skill_dir, dst)
+        installed.append(skill_dir.name)
+
+    if installed:
+        console.print(
+            Panel(
+                "[green]스킬 설치 완료![/green]\n\n"
+                + "\n".join(f"  ✅ /{s}" for s in installed)
+                + "\n\nClaude Code 에서 바로 사용할 수 있습니다.",
+                title="annlib install-skills",
+            )
+        )
+    else:
+        console.print("[yellow]설치할 스킬이 없습니다.[/yellow]")
+
+
 def _guess_vault_path() -> Path | None:
     """OS별로 일반적인 Obsidian Vault 위치를 탐색합니다."""
     candidates = [
